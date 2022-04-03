@@ -1,0 +1,39 @@
+sensor_pointcloud:
+  ros__parameters:
+    pointcloud_topic: sensors/pointcloud
+    pointcloud_frame: base_link
+
+# List of sensors
+    sensors: [ sensor0, sensor1 ]
+
+
+    sensor0:
+        topic: sensor_one/range
+        device:
+            type: SRF05
+            pin: 14
+            timeout: 60000
+        transform:
+            frame: sensor0
+            posX: 0.03
+            posY: -0.07
+            posZ: 0.05
+            roll: 0.0
+            pitch: 0.0
+            yaw: 3.14
+    sensor1:
+        topic: sensor_two/range
+        device:
+            type: SRF10
+            addr: 0xE2
+            timeout: 60000
+        transform:
+            frame: sensor1
+            posX: 0.08
+            posY: -0.05
+            posZ: 0.05
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+
+
