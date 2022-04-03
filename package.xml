@@ -5,7 +5,7 @@
   <version>1.0.0</version>
   <description>Aggregate and convert range_msgs to PointCloud2</description>
   <maintainer email="eslaghuis@gmail.com">esalaghuis@gmail.comc</maintainer>
-  <reference email="eliot.lim@gmail.com">eliot</reference>
+  <author email="eliot.lim@gmail.com">eliot</author>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
