@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Xeni Robotics
+// Copyright (c) 2021, 2022 Eric Slaghuis
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
-    sensor_pointcloud
-    Purpose: ROS2 Node for creating and managing sensor_pointcloud instances
-    
-    @Author Eric Slaghuis (github @slaghuis)
-    @version 1.0 (3/4/2022)
-  
-    Adapted from the work of 
-    @author Eliot Lim (github: @eliotlim)
-    @version 1.0 (16/5/17)
+/* ***************************************************************************
+ *  sensor_pointcloud
+ *  Purpose: ROS2 Node for creating and managing sensor_pointcloud instances
+ *  
+ *  @Author Eric Slaghuis (github @slaghuis)
+ *  @version 1.1 (3/4/2022)
+ *
+ *  Adapted from the work of 
+ *  @author Eliot Lim (github: @eliotlim)
+ *  @version 1.0 (16/5/17)
 */
 
 #include "sensor_pointcloud/sensor_pointcloud.h"
@@ -35,7 +35,7 @@ SensorPointcloud::SensorPointcloud()
     using namespace std::placeholders;
        
     // Read some parameters
-    this->declare_parameter<std::string>("pointcloud_frame", "sensor_pase");
+    this->declare_parameter<std::string>("pointcloud_frame", "sensor_pose");
     this->declare_parameter<std::string>("pointcloud_topic", "pointcloud");
     this->declare_parameter("sensors");
     
@@ -66,11 +66,8 @@ void SensorPointcloud::init()
   for (std::vector<std::string>::iterator sensorNameIt = sensors.begin(); sensorNameIt != sensors.end(); ++sensorNameIt) {
     std::string sensor_topic, sensor_frame;
     
-    this->declare_parameter<std::string>(*sensorNameIt + ".topic", "error");
-    this->get_parameter(*sensorNameIt + ".topic", sensor_topic);
-
-    this->declare_parameter<std::string>(*sensorNameIt + ".transform.frame", "error");
-    this->get_parameter(*sensorNameIt + ".transform.frame", sensor_frame);
+    sensor_topic = this->declare_parameter<std::string>(*sensorNameIt + ".topic", "error");
+    sensor_frame = this->declare_parameter<std::string>(*sensorNameIt + ".transform.frame", "error");
         
     RCLCPP_INFO(this->get_logger(), "Sensor Parameters Loaded - Topic: %s Frame: %s ", sensor_topic.c_str(), sensor_frame.c_str());
     
@@ -91,15 +88,13 @@ void SensorPointcloud::init()
     }
     
     if (loadTransform) {
-      float roll, pitch, yaw;
-      this->declare_parameter<float>(*sensorNameIt + ".transform/roll", 0.0);
-      this->get_parameter(*sensorNameIt + ".transform/roll",  roll);
-      this->declare_parameter<float>(*sensorNameIt + ".transform/pitch", 0.0);
-      this->get_parameter(*sensorNameIt + ".transform/pitch", pitch);
-      this->declare_parameter<float>(*sensorNameIt + ".transform/yaw", 0.0);
-      this->get_parameter(*sensorNameIt + ".transform/yaw",   yaw);
-      
       // Load role, pitch and yaw from parameters
+
+      float roll, pitch, yaw;
+      roll = this->declare_parameter<float>(*sensorNameIt + ".transform/roll", 0.0);
+      pitch = this->declare_parameter<float>(*sensorNameIt + ".transform/pitch", 0.0);
+      yaw = this->declare_parameter<float>(*sensorNameIt + ".transform/yaw", 0.0);
+      
       tf2::Quaternion q;
       q.setRPY(roll, pitch, yaw);
       

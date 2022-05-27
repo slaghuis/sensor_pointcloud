@@ -23,6 +23,7 @@ public:
   //~Sensor() {}
 
   void set_transform(const geometry_msgs::msg::TransformStamped transformS);
+  void stop_transform();  
   std::shared_ptr<geometry_msgs::msg::TransformStamped> get_transform();
   float get_range();
 

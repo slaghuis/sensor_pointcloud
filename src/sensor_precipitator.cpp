@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Xeni Robotics
+// Copyright (c) 2021, 2022 Eric Slaghuis
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
-  SensorPrecipitator Class
-  Purpose: Class that converts 'range msg' and 'tranforms' into PointCloud2
-           Also publishes sensor frame transforms if defined
-  @Author Eric Slaghuis (github @slaghuis)
-  @version 1.0 (3/4/2022)
-  
-  Adapted from the work of 
-  @author Eliot Lim (github: @eliotlim)
-  @version 1.0 (16/5/17)
-  
-  Adapted from http://docs.ros.org/hydro/api/segbot_sensors/html/range__to__cloud_8cpp_source.html
-    
-*/
+/* ************************************************************************************
+ * SensorPrecipitator Class
+ * Purpose: Class that converts 'range msg' and 'tranforms' into PointCloud2
+ *          Also publishes sensor frame transforms if defined
+ * @Author Eric Slaghuis (github @slaghuis)
+ * @version 1.1 (3/4/2022)
+ * 
+ * Adapted from the work of 
+ * @author Eliot Lim (github: @eliotlim)
+ * @version 1.0 (16/5/17)
+ * 
+ * Adapted from http://docs.ros.org/hydro/api/segbot_sensors/html/range__to__cloud_8cpp_source.html
+ *   
+ * ************************************************************************************/
 
 #include <sensor_pointcloud/sensor_precipitator.h>
 
@@ -59,7 +59,8 @@ std::shared_ptr<Sensor> SensorPrecipitator::add_sensor(std::string topic, std::s
 void SensorPrecipitator::execute(double rate) {
   rclcpp::Rate loop_rate(rate);
   
-
+  // Publish sensor transform if available
+  
   geometry_msgs::msg::TransformStamped transformStamped;                                       
     
   while (rclcpp::ok()) {
@@ -88,13 +89,19 @@ void SensorPrecipitator::execute(double rate) {
     // Convert all Sensor readings to Points
     for (std::vector<std::shared_ptr<Sensor>>::iterator sensorIt = sensors.begin(); sensorIt != sensors.end(); ++sensorIt, ++out_x, ++out_y, ++out_z) { 
         std::shared_ptr<Sensor> sensor = *sensorIt;
-        
+      
       // Publish sensor transform if available
       if (sensor->transform_) {
         sensor->get_transform()->header.stamp = node_->get_clock()->now();
-        tf_publisher_->sendTransform( * sensor->get_transform());
-      }
+        tf_publisher_->sendTransform( * sensor->get_transform() );
 
+        RCLCPP_INFO(node_->get_logger(), "Setting static transform %s to %s", 
+                    sensor->get_transform()->header.frame_id.c_str(), 
+                    sensor->get_transform()->child_frame_id.c_str());
+                
+        sensor->stop_transform();   // But only publish the static transform once!
+      }
+        
       // Check Sensor Range Validity
       if (sensor->get_range() < 0) { continue; }
 
@@ -113,7 +120,7 @@ void SensorPrecipitator::execute(double rate) {
                     sensor->frame_.c_str(), frame_.c_str(), ex.what());
         continue; // skip this reading
       }
-
+      
       // Transform the range reading into a point
       geometry_msgs::msg::PointStamped pt;
       pt.point.x = sensor->get_range();

@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>sensor_pointcloud</name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <description>Aggregate and convert range_msgs to PointCloud2</description>
-  <maintainer email="eslaghuis@gmail.com">esalaghuis@gmail.comc</maintainer>
+  <maintainer email="eslaghuis@gmail.com">Eric Slaghuis</maintainer>
   <author email="eliot.lim@gmail.com">eliot</author>
   <license>Apache License 2.0</license>
 

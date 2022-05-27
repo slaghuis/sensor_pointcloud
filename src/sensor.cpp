@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Xeni Robotics
+// Copyright (c) 2022 Eric Slaghuis
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
-    Sensor Class
-    Purpose: Class that subscribes to `range_msg`
-    
-    @Author Eric Slaghuis (github @slaghuis)
-    @version 1.0 (3/4/2022)
-  
-    Adapted from the work of 
-    @author Eliot Lim (github: @eliotlim)
-    @version 1.0 (16/5/17)
-*/
+/* ********************************************************************************
+ *   Sensor Class
+ *   Purpose: Class that subscribes to `range_msg`
+ *   
+ *   @Author Eric Slaghuis (github @slaghuis)
+ *   @version 1.0 (3/4/2022)
+ * 
+ *   Adapted from the work of 
+ *   @author Eliot Lim (github: @eliotlim)
+ *   @version 1.0 (16/5/17)
+ * ********************************************************************************/
 
 #include <sensor_pointcloud/sensor.h>
 
@@ -40,6 +40,11 @@ void Sensor::set_transform(geometry_msgs::msg::TransformStamped transformS) {
     transform_ = true;
     this->transformS = std::shared_ptr<geometry_msgs::msg::TransformStamped>(new geometry_msgs::msg::TransformStamped(transformS));
     this->transformS->child_frame_id = frame_;
+}
+
+void Sensor::stop_transform() 
+{
+  transform_ = false;
 }
 
 std::shared_ptr<geometry_msgs::msg::TransformStamped> Sensor::get_transform() { return transformS; }
