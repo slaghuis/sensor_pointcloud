@@ -80,9 +80,11 @@ void SensorPrecipitator::execute(double rate) {
     sensor_msgs::PointCloud2Iterator<float> out_y(msg, "y");
     sensor_msgs::PointCloud2Iterator<float> out_z(msg, "z");  
 
+    // Flag to check if any data was added to the cloud
+    bool data_added = false;
      
     // Convert all Sensor readings to Points
-    for (std::vector<std::shared_ptr<Sensor>>::iterator sensorIt = sensors.begin(); sensorIt != sensors.end(); ++sensorIt, ++out_x, ++out_y, ++out_z) { 
+    for (std::vector<std::shared_ptr<Sensor>>::iterator sensorIt = sensors.begin(); sensorIt != sensors.end(); ++sensorIt) { 
         std::shared_ptr<Sensor> sensor = *sensorIt;
       
       auto range = sensor->get_range();
@@ -118,15 +120,24 @@ void SensorPrecipitator::execute(double rate) {
 
       geometry_msgs::msg::PointStamped base_point;
       tf2::doTransform(sensor_point, base_point, transform);
- 
+      
       // Store the point in the pointcloud
       *out_x = base_point.point.x;
       *out_y = base_point.point.y;
       *out_z = base_point.point.z;      
+      
+      ++out_x;
+      ++out_y;
+      ++out_z;
+      
+      data_added = true;
     }
     
-    pointcloud_publisher_->publish(msg);
-    RCLCPP_DEBUG(node_->get_logger(), "PointCloud published");
+    if(data_added) {
+      pointcloud_publisher_->publish(msg);
+      RCLCPP_DEBUG(node_->get_logger(), "PointCloud published");
+    } 
+    
     loop_rate.sleep();
   }
 }
