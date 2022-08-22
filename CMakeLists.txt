@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(sensor_pointcloud)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -27,7 +22,7 @@ find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(sensor_pointcloud 
-  src/sensor_pointcloud_node.cpp
+  src/sensor_pointcloud.cpp
   src/sensor.cpp
   src/sensor_precipitator.cpp)
 ament_target_dependencies(sensor_pointcloud 

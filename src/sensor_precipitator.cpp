@@ -41,12 +41,9 @@ SensorPrecipitator::SensorPrecipitator(rclcpp::Node::SharedPtr node, std::string
   transform_listener_ =
     std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
  
-  // Transform publisher
-  tf_publisher_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
-                                                                            
   // Start publisher thread
   float rate = 20.0;
-  std::thread{std::bind(&SensorPrecipitator::execute, this, _1), rate}.detach();                                     
+  std::thread{std::bind(&SensorPrecipitator::execute, this, std::placeholders::_1), rate}.detach();                                     
 }
 
 std::shared_ptr<Sensor> SensorPrecipitator::add_sensor(std::string topic, std::string frame) {
@@ -56,13 +53,11 @@ std::shared_ptr<Sensor> SensorPrecipitator::add_sensor(std::string topic, std::s
   return sensor_ptr;
 }
 
+
+
 void SensorPrecipitator::execute(double rate) {
   rclcpp::Rate loop_rate(rate);
-  
-  // Publish sensor transform if available
-  
-  geometry_msgs::msg::TransformStamped transformStamped;                                       
-    
+                                       
   while (rclcpp::ok()) {
     
     // Fill point cloud
@@ -90,48 +85,44 @@ void SensorPrecipitator::execute(double rate) {
     for (std::vector<std::shared_ptr<Sensor>>::iterator sensorIt = sensors.begin(); sensorIt != sensors.end(); ++sensorIt, ++out_x, ++out_y, ++out_z) { 
         std::shared_ptr<Sensor> sensor = *sensorIt;
       
-      // Publish sensor transform if available
-      if (sensor->transform_) {
-        sensor->get_transform()->header.stamp = node_->get_clock()->now();
-        tf_publisher_->sendTransform( * sensor->get_transform() );
-
-        RCLCPP_INFO(node_->get_logger(), "Setting static transform %s to %s", 
-                    sensor->get_transform()->header.frame_id.c_str(), 
-                    sensor->get_transform()->child_frame_id.c_str());
-                
-        sensor->stop_transform();   // But only publish the static transform once!
-      }
-        
+      auto range = sensor->get_range();
+      
       // Check Sensor Range Validity
-      if (sensor->get_range() < 0) { continue; }
-
+      if (range < 0) { continue; }
+      
       // Get StampedTransform for Sensor
       geometry_msgs::msg::TransformStamped transform;
       try {
         // Calling lookupTransform with tf2::TimePointZero
         // results in the latest available transform
-        // Swapped point_cloud->header.frame_id with "map"
-        // This is dependent on a map->odom->base_link->"sensor" transform chain being in place!!!!! 
         transform = tf_buffer_->lookupTransform(frame_,
-                                                   sensor->frame_,
-                                                   tf2::TimePointZero);
+                                                sensor->frame_,
+                                                tf2::TimePointZero);
       } catch (tf2::TransformException & ex) {
         RCLCPP_WARN(node_->get_logger(), "Could not transform %s to %s : %s", 
                     sensor->frame_.c_str(), frame_.c_str(), ex.what());
         continue; // skip this reading
       }
-      
-      // Transform the range reading into a point
-      geometry_msgs::msg::PointStamped pt;
-      pt.point.x = sensor->get_range();
-      geometry_msgs::msg::PointStamped point_out;
+            
+      // Lookup the transformed coordinates of this point
+      geometry_msgs::msg::PointStamped sensor_point;
+      sensor_point.header.frame_id = sensor->frame_;
 
-      tf2::doTransform(pt, point_out, transform);
+      //we'll just use the most recent transform available for our simple example
+     // sensor_point.header.stamp = node_->get_clock()->now();
 
+      //just an arbitrary point in space
+      sensor_point.point.x = range;
+      sensor_point.point.y = 0.0;
+      sensor_point.point.z = 0.0;
+
+      geometry_msgs::msg::PointStamped base_point;
+      tf2::doTransform(sensor_point, base_point, transform);
+ 
       // Store the point in the pointcloud
-      *out_x = point_out.point.x;
-      *out_y = point_out.point.y;
-      *out_z = point_out.point.z;      
+      *out_x = base_point.point.x;
+      *out_y = base_point.point.y;
+      *out_z = base_point.point.z;      
     }
     
     pointcloud_publisher_->publish(msg);
@@ -139,4 +130,3 @@ void SensorPrecipitator::execute(double rate) {
     loop_rate.sleep();
   }
 }
-
